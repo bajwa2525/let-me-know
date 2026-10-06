@@ -1,26 +1,248 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #05060a;
+  --surface: #0d0f17;
+  --surface-2: #12141f;
+  --foreground: #f4f5f7;
+  --muted: #9aa0ac;
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #7c5cff;
+  --accent-2: #21d4fd;
+  --accent-3: #ff5cad;
+
+  /* Adaptive overlay tints used for chips, hover states, glass panels —
+     always reference these instead of literal bg-white/x or bg-black/x
+     so components stay correct in both themes. */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --overlay: rgba(255, 255, 255, 0.05);
+  --overlay-strong: rgba(255, 255, 255, 0.1);
+  --overlay-stronger: rgba(255, 255, 255, 0.2);
+  --overlay-strongest: rgba(255, 255, 255, 0.4);
+  --radial-1: rgba(124, 92, 255, 0.18);
+  --radial-2: rgba(33, 212, 253, 0.12);
+
+  /* Price tier badge text — light enough to read on the translucent tinted
+     badge backgrounds used against a dark page. */
+  --tier-premium-text: #ddd6fe;
+  --tier-popular-text: #fed7aa;
+  --tier-value-text: #a7f3d0;
+}
+
+html[data-theme="light"] {
+  --background: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #eef0f5;
+  --foreground: #14151a;
+  --muted: #5b616e;
+  --border: rgba(0, 0, 0, 0.08);
+
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --overlay: rgba(0, 0, 0, 0.045);
+  --overlay-strong: rgba(0, 0, 0, 0.08);
+  --overlay-stronger: rgba(0, 0, 0, 0.12);
+  --overlay-strongest: rgba(0, 0, 0, 0.2);
+  --radial-1: rgba(124, 92, 255, 0.12);
+  --radial-2: rgba(33, 212, 253, 0.1);
+
+  /* Darker shades so the same badges stay readable on a light page. */
+  --tier-premium-text: #6d28d9;
+  --tier-popular-text: #c2410c;
+  --tier-value-text: #047857;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
   background: var(--background);
+  background-image:
+    radial-gradient(60rem 40rem at 85% -10%, var(--radial-1), transparent 60%),
+    radial-gradient(50rem 30rem at 0% 20%, var(--radial-2), transparent 60%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, var(--accent-2), var(--accent), var(--accent-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hot Models banner animations */
+@keyframes hotpan {
+  0%, 100% { transform: scale(1.1) translate(0, 0); }
+  50% { transform: scale(1.25) translate(-2%, 2%); }
+}
+
+@keyframes hotfade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animated price box */
+@keyframes pricepulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 92, 255, 0.35); }
+  50% { box-shadow: 0 0 0 4px rgba(124, 92, 255, 0); }
+}
+
+@keyframes priceshimmer {
+  0% { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(150%); }
+}
+
+/* Scroll hint — gentle float, not a bounce/elastic wiggle. */
+@keyframes scrollhint {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(6px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[scrollhint_1\.8s_ease-out_infinite\],
+  .animate-\[hotpan_8s_ease-in-out_infinite\],
+  .animate-\[hotfade_600ms_ease-out\],
+  .animate-\[pricepulse_2\.4s_ease-in-out_infinite\],
+  .animate-\[priceshimmer_2\.4s_ease-in-out_infinite\] {
+    animation: none !important;
+  }
+}
+
+/* Card hover shine — a soft light streak that sweeps across a product/brand
+   card on hover, layered on top of the existing lift + border treatment. */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+.card-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, var(--overlay-stronger) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 650ms ease;
+  pointer-events: none;
+}
+.card-shine:hover::after {
+  transform: translateX(120%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-shine::after {
+    display: none;
+  }
+}
+
+/* Auth pages (login/register) — staggered entrance for the card and its
+   fields. Ambient background motion now comes from the site-wide
+   .ambient-blob layer (AmbientBackground component). */
+@keyframes authEnter {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes authFieldIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes authShake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.auth-card {
+  animation: authEnter 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.auth-field {
+  animation: authFieldIn 500ms ease-out both;
+  animation-delay: var(--auth-field-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-card,
+  .auth-field {
+    animation: none;
+  }
+  .animate-\[authShake_500ms_ease-in-out\],
+  .animate-\[authFieldIn_300ms_ease-out\] {
+    animation: none !important;
+  }
+}
+
+/* Site-wide ambient background — fixed, blurred, drifting gradient blobs
+   sitting behind every page. Same drift language as .auth-blob, tuned
+   larger/slower for full-viewport use. Amplitude and direction per blob
+   come from --drift-x/--drift-y so the three never move in lockstep. */
+@keyframes ambientDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(var(--drift-x, 5%), calc(var(--drift-y, 5%) * -1)) scale(1.06); }
+  50% { transform: translate(calc(var(--drift-x, 5%) * -1), var(--drift-y, 5%)) scale(0.94); }
+  75% { transform: translate(var(--drift-x, 5%), var(--drift-y, 5%)) scale(1.03); }
+}
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(100px);
+  animation-name: ambientDrift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-blob {
+    animation: none;
+  }
 }

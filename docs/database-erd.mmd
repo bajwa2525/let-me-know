@@ -1,0 +1,82 @@
+erDiagram
+    BRAND ||--o{ PRODUCT : "has"
+    PRODUCT ||--o{ PRODUCT_IMAGE : "has gallery"
+    PRODUCT ||--o{ MARKET_PRICE : "has market prices"
+
+    USER {
+        string id PK
+        string email UK
+        string passwordHash
+        string name
+        string role "ADMIN or USER"
+        datetime createdAt
+    }
+
+    BRAND {
+        string id PK
+        string name UK
+        string slug UK
+        string logo "nullable"
+        string gradient "nullable"
+        string_array colorway
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    PRODUCT {
+        string id PK
+        string slug UK
+        string name
+        string tagline "nullable"
+        string productType "PHONE/LAPTOP/DESKTOP/GAMING/ACCESSORY"
+        string brandId FK
+        float priceUsd
+        int releaseYear "nullable"
+        float rating
+        string_array tags
+        string gradient "nullable"
+        string_array colorway
+        string image "nullable"
+        string imageAlt "nullable"
+        string verdict "nullable"
+        string_array pros
+        string_array cons
+        json specs "category-specific key/value pairs"
+        boolean isHot
+        boolean isFeatured
+        datetime dateAdded
+        datetime dateUpdated
+    }
+
+    PRODUCT_IMAGE {
+        string id PK
+        string productId FK
+        string src
+        string alt "nullable"
+        int sortOrder
+    }
+
+    MARKET_PRICE {
+        string id PK
+        string productId FK
+        string market "e.g. Hafeez Center"
+        string city "e.g. Lahore"
+        float price "PKR"
+        int stock
+        datetime updatedAt
+    }
+
+    NEWS_ARTICLE {
+        string id PK
+        string slug UK
+        string title
+        string excerpt
+        string_array body "paragraphs"
+        string image "nullable"
+        string imageAlt "nullable"
+        string category
+        string author
+        datetime date
+        datetime createdAt
+        datetime updatedAt
+    }

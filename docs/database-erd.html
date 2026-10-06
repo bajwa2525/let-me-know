@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Let Me Know — Database ER Diagram</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Arial, sans-serif; background: #0d0f17; color: #f4f5f7; margin: 0; padding: 32px 16px 64px; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  p.sub { color: #9aa0ac; font-size: 13px; margin: 0 0 24px; }
+  #toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
+  button { background: #7c5cff; color: white; border: none; border-radius: 8px; padding: 10px 18px; font-size: 14px; font-weight: 500; cursor: pointer; }
+  button:hover { opacity: 0.9; }
+  button.secondary { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #f4f5f7; }
+  #diagram-wrap { background: white; border-radius: 16px; padding: 24px; overflow: auto; }
+  .mermaid { display: flex; justify-content: center; }
+</style>
+</head>
+<body>
+  <h1>Let Me Know — Database ER Diagram</h1>
+  <p class="sub">Brand → Product → (ProductImage gallery, MarketPrice per-market pricing); User and NewsArticle stand alone.</p>
+
+  <div id="toolbar">
+    <button id="download-png">Download as PNG</button>
+    <button class="secondary" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <div id="diagram-wrap">
+    <pre class="mermaid">
+erDiagram
+    BRAND ||--o{ PRODUCT : "has"
+    PRODUCT ||--o{ PRODUCT_IMAGE : "has gallery"
+    PRODUCT ||--o{ MARKET_PRICE : "has market prices"
+
+    USER {
+        string id PK
+        string email UK
+        string passwordHash
+        string name
+        string role "ADMIN or USER"
+        datetime createdAt
+    }
+
+    BRAND {
+        string id PK
+        string name UK
+        string slug UK
+        string logo "nullable"
+        string gradient "nullable"
+        string_array colorway
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    PRODUCT {
+        string id PK
+        string slug UK
+        string name
+        string tagline "nullable"
+        string productType "PHONE/LAPTOP/DESKTOP/GAMING/ACCESSORY"
+        string brandId FK
+        float priceUsd
+        int releaseYear "nullable"
+        float rating
+        string_array tags
+        string gradient "nullable"
+        string_array colorway
+        string image "nullable"
+        string imageAlt "nullable"
+        string verdict "nullable"
+        string_array pros
+        string_array cons
+        json specs "category-specific key/value pairs"
+        boolean isHot
+        boolean isFeatured
+        datetime dateAdded
+        datetime dateUpdated
+    }
+
+    PRODUCT_IMAGE {
+        string id PK
+        string productId FK
+        string src
+        string alt "nullable"
+        int sortOrder
+    }
+
+    MARKET_PRICE {
+        string id PK
+        string productId FK
+        string market "e.g. Hafeez Center"
+        string city "e.g. Lahore"
+        float price "PKR"
+        int stock
+        datetime updatedAt
+    }
+
+    NEWS_ARTICLE {
+        string id PK
+        string slug UK
+        string title
+        string excerpt
+        string_array body "paragraphs"
+        string image "nullable"
+        string imageAlt "nullable"
+        string category
+        string author
+        datetime date
+        datetime createdAt
+        datetime updatedAt
+    }
+    </pre>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1/dist/html2canvas.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: "default" });
+
+    const btn = document.getElementById("download-png");
+
+    document.getElementById("download-png").addEventListener("click", async () => {
+      const svg = document.querySelector("#diagram-wrap svg");
+      if (!svg) {
+        alert("Diagram hasn't finished rendering yet — wait a second and try again.");
+        return;
+      }
+
+      const originalLabel = btn.textContent;
+      btn.textContent = "Rendering…";
+      btn.disabled = true;
+
+      try {
+        // html2canvas rasterizes the live DOM (handles mermaid's
+        // foreignObject text labels correctly, unlike an SVG->Image->canvas
+        // round-trip, which silently taints the canvas and produces a blank
+        // or failed download in Chrome/Edge).
+        const canvas = await html2canvas(document.getElementById("diagram-wrap"), {
+          backgroundColor: "#ffffff",
+          scale: 2,
+          useCORS: true,
+        });
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            alert("Couldn't generate the image. Try 'Print / Save as PDF' instead.");
+            return;
+          }
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "letmeknow-database-erd.png";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }, "image/png");
+      } catch (err) {
+        console.error(err);
+        alert("Download failed: " + err.message + "\n\nTry 'Print / Save as PDF' instead.");
+      } finally {
+        btn.textContent = originalLabel;
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

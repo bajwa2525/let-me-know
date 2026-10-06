@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ProductType {
+  PHONE
+  LAPTOP
+  DESKTOP
+  GAMING
+  ACCESSORY
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+}
+
+model Brand {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  logo      String?
+  gradient  String?
+  colorway  String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  tagline     String?
+  productType ProductType
+
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id])
+
+  priceUsd    Float
+  releaseYear Int?
+  rating      Float    @default(0)
+  tags        String[]
+  gradient    String?
+  colorway    String[]
+
+  image    String?
+  imageAlt String?
+
+  verdict String?
+  pros    String[]
+  cons    String[]
+
+  /** Category-specific spec key/value pairs (display, chipset, cpu, gpu, …) —
+   *  shape differs per productType, so it stays flexible JSON rather than a
+   *  sparse fixed column set. */
+  specs Json?
+
+  isHot      Boolean @default(false)
+  isFeatured Boolean @default(false)
+
+  dateAdded   DateTime @default(now())
+  dateUpdated DateTime @updatedAt
+
+  gallery      ProductImage[]
+  marketPrices MarketPrice[]
+  priceHistory PriceSnapshot[]
+
+  @@index([productType])
+  @@index([brandId])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  src       String
+  alt       String?
+  sortOrder Int     @default(0)
+
+  @@index([productId])
+}
+
+/** Per-market retail price (and stock) for a product — e.g. Hafeez Center,
+ *  Lahore. Replaces the algorithmically-generated Pakistan market board with
+ *  real, admin-editable numbers. */
+model MarketPrice {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  market    String
+  city      String
+  price     Float
+  stock     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([city, market])
+}
+
+/** A snapshot of a product's average market price at a point in time,
+ *  recorded automatically whenever its market prices are set or updated —
+ *  this is what the price-trend chart plots, real history instead of a
+ *  simulation. */
+model PriceSnapshot {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  avgPrice   Float
+  recordedAt DateTime @default(now())
+
+  @@index([productId, recordedAt])
+}
+
+model NewsArticle {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  excerpt   String
+  body      String[]
+  image     String?
+  imageAlt  String?
+  category  String
+  author    String
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}
